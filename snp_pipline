@@ -1,0 +1,113 @@
+configfile:"config.yaml"
+
+rule all:
+	input:
+		expand('fastqc/raw/{sample}_1_fastqc.html',sample=config['samples']),
+		expand('fastqc/raw/{sample}_2_fastqc.html',sample=config['samples']),
+#		expand('clean/{sample}_1_paired.fq.gz',sample=config['samples']),
+#		expand('clean/{sample}_2_paired.fq.gz',sample=config['samples']),
+		expand('bam/{sample}.bam',sample=config['samples']),
+		expand('bam/{sample}_sorted.bam',sample=config['samples']),
+		expand("bam/{sample}_sorted.markup.bam.bai",sample=config['samples']),
+		expand("bam/{sample}_sorted.markup.bam",sample=config['samples']),
+		expand('vcf/{sample}.g.vcf',sample=config['samples']),
+		expand('vcf/{sample}.vcf',sample=config['samples']),
+		expand("vcf/{sample}.snp.vcf",sample=config['samples']),
+		expand("vcf/{sample}.snp.filter.vcf",sample=config['samples'])
+
+
+rule fastqc:
+	input:
+		config['path']+'/{sample}_1.fq.gz',
+		config['path']+'/{sample}_2.fq.gz'
+	output:
+		'fastqc/raw/{sample}_1_fastqc.html',
+		'fastqc/raw/{sample}_2_fastqc.html'
+	shell:
+		"fastqc -t 2 -o fastqc/raw {input}"
+
+#rule trimmomatic:
+#	input:
+#		r1=config["path"]+'/{sample}_1.fq.gz',
+#		r2=config["path"]+'/{sample}_2.fq.gz'
+#	output:
+#		r1_paired='clean/{sample}_1_paired.fq.gz',
+#		r2_paired='clean/{sample}_2_paired.fq.gz',
+#		r1_unpaired='clean/{sample}_1_unpaired.fq.gz',
+#		r2_unpaired='clean/{sample}_2_unpaired.fq.gz'
+#	params:
+#		adapter=config['adapter']
+#	shell:
+#		'trimmomatic PE -threads 3 {input.r1} {input.r2} {output.r1_paired} {output.r1_unpaired} {output.r2_paired} {output.r2_unpaired} ILLUMINACLIP:{params.adapter}:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36'
+
+#rule bwa:
+#	input:
+#		r1='clean/{sample}_1_paired.fq.gz',
+#		r2='clean/{sample}_2_paired.fq.gz'
+#	output:
+#		r1='bam/{sample}.bam'
+#	params:
+#		bwa_index=config['bwa_index']
+#	shell:
+#		"bwa mem -t 4 -R '@RG\\tID:foo\\tPL:UNKNOWN\\tSM:mutmap' {params.bwa_index} {input.r1} {input.r2} | samtools view -Sb - > {output.r1}"
+
+rule samtools:
+	input:
+		'bam/{sample}.bam'
+	output:
+		'bam/{sample}_sorted.bam'
+	shell:
+		"samtools sort -@ 4 -m 1G -O bam -o {output} {input}"
+
+rule markduplicate:
+	input:
+		'bam/{sample}_sorted.bam'
+	output:
+		r1="bam/{sample}_sorted.markup.bam",
+		r2='bam/{sample}_sorted_markdup_metrics.txt'
+	shell:
+		'/home/galaxy/software/gatk-4.0.6.0/gatk MarkDuplicates -I {input} -O {output.r1} -M {output.r2}'
+
+rule index:
+	input:
+		"bam/{sample}_sorted.markup.bam"
+	output:
+		"bam/{sample}_sorted.markup.bam.bai"
+	shell:
+		'samtools index {input}'
+
+rule HaplotypeCaller:
+	input:
+		"bam/{sample}_sorted.markup.bam"
+	output:
+		"vcf/{sample}.g.vcf"
+	params:
+		r1="/home/galaxy/lee/database/BWA_index/TAIR10_chr_all.fa"
+	shell:
+		"/home/galaxy/software/gatk-4.0.6.0/gatk HaplotypeCaller -R {params.r1} --emit-ref-confidence GVCF -I {input} -O {output}"
+
+rule GenotypeGvcfs:
+	input:
+		"vcf/{sample}.g.vcf"
+	output:
+		"vcf/{sample}.vcf"
+	params:
+		r1="/home/galaxy/lee/database/BWA_index/TAIR10_chr_all.fa"
+	shell:
+		"/home/galaxy/software/gatk-4.0.6.0/gatk GenotypeGVCFs -R {params.r1} -V {input} -O {output}"
+
+rule filter:
+	input:
+		"vcf/{sample}.vcf"
+	output:
+		"vcf/{sample}.snp.vcf"
+	shell:
+		"/home/galaxy/software/gatk-4.0.6.0/gatk SelectVariants -select-type SNP -V {input} -O {output}"
+
+rule filter2:
+	input:
+		"vcf/{sample}.snp.vcf"
+	output:
+		"vcf/{sample}.snp.filter.vcf"
+	shell:
+		'/home/galaxy/software/gatk-4.0.6.0/gatk VariantFiltration -V {input} --filter-expression "QD < 2.0 || MQ < 40.0 || FS > 60.0 || SOR > 3.0 || MQRankSum < -12.5 || ReadPosRankSum < -8.0" --filter-name "PASS" -O {output}'

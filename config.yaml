@@ -1,0 +1,25 @@
+species: arabidopsis
+
+path: /home/galaxy/lee/snp/raw_data
+
+adapter: /home/galaxy/miniconda3/share/trimmomatic-0.38-0/adapters/TruSeq3-PE-2.fa
+
+bwa_index: /home/galaxy/lee/database/BWA_index/TAIR10_chr_all.fa
+
+samples:
+ - 1
+ - 122
+ - 128
+ - 16
+ - 182
+ - 20
+ - 214
+ - 2
+ - 23
+ - 40
+ - 45
+ - 56
+ - 9
+ - 98
+
+
