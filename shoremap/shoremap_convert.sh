@@ -1,0 +1,15 @@
+SHOREmap convert --marker 122.snp.filter.vcf --folder shoremap/122 -runid 1 &
+SHOREmap convert --marker 128.snp.filter.vcf --folder shoremap/128 -runid 1 &
+SHOREmap convert --marker 16.snp.filter.vcf --folder shoremap/16 -runid 1 &
+SHOREmap convert --marker 182.snp.filter.vcf --folder shoremap/182 -runid 1 &
+SHOREmap convert --marker 1.snp.filter.vcf --folder shoremap/1 -runid 1 &
+SHOREmap convert --marker 20.snp.filter.vcf --folder shoremap/20 -runid 1 &
+SHOREmap convert --marker 214.snp.filter.vcf --folder shoremap/214 -runid 1 &
+SHOREmap convert --marker 23.snp.filter.vcf --folder shoremap/23 -runid 1 &
+SHOREmap convert --marker 2.snp.filter.vcf --folder shoremap/2 -runid 1 &
+SHOREmap convert --marker 40.snp.filter.vcf --folder shoremap/40 -runid 1 &
+SHOREmap convert --marker 45.snp.filter.vcf --folder shoremap/45 -runid 1 &
+SHOREmap convert --marker 56.snp.filter.vcf --folder shoremap/56 -runid 1 &
+SHOREmap convert --marker 98.snp.filter.vcf --folder shoremap/98 -runid 1 &
+SHOREmap convert --marker 9.snp.filter.vcf --folder shoremap/9 -runid 1 &
+SHOREmap convert --marker raptor1.snp.filter.vcf --folder shoremap/raptor1 -runid 1 &
